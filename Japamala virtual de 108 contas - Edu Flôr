@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Japamala Virtual Ho'oponopono</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #110d0b;
+      color: #f3eae1;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    .font-cinzel {
+      font-family: 'Cinzel', serif;
+    }
+
+    /* Soft ambient background radial gradient */
+    .bg-zen {
+      background: radial-gradient(circle at 50% 20%, #2a1f1a 0%, #17110d 60%, #0b0806 100%);
+    }
+
+    /* Custom scrollbar for bead track */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(217, 119, 6, 0.3);
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(217, 119, 6, 0.6);
+    }
+
+    /* Bead animations */
+    .bead {
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: inset -2px -2px 6px rgba(0,0,0,0.6), inset 2px 2px 5px rgba(255,255,255,0.2), 0 4px 8px rgba(0,0,0,0.4);
+    }
+    .bead:active {
+      transform: scale(0.9);
+    }
+    .bead-completed {
+      background: linear-gradient(135deg, #d97706, #78350f) !important;
+      color: #fff8f0 !important;
+      border-color: #f59e0b !important;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.5), inset 0 2px 4px rgba(255,255,255,0.4) !important;
+    }
+    .bead-active {
+      transform: scale(1.18);
+      border-color: #fbbf24 !important;
+      box-shadow: 0 0 18px rgba(251, 191, 36, 0.8), inset 0 2px 4px rgba(255,255,255,0.6) !important;
+      animation: pulse-active 1.8s infinite ease-in-out;
+    }
+
+    @keyframes pulse-active {
+      0%, 100% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.7); }
+      50% { box-shadow: 0 0 25px rgba(251, 191, 36, 1); }
+    }
+
+    .pulse-btn {
+      animation: pulse-subtle 2s infinite ease-in-out;
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+  </style>
+</head>
+<body class="bg-zen min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+  <!-- Header & Top Stats -->
+  <header class="w-full max-w-4xl mx-auto px-4 pt-6 pb-2 flex justify-between items-center z-10">
+    <div class="flex items-center space-x-2">
+      <div class="w-9 h-9 rounded-full bg-amber-900/40 border border-amber-600/40 flex items-center justify-center text-amber-400">
+        <i class="fa-solid fa-om text-lg"></i>
+      </div>
+      <div>
+        <h1 class="font-cinzel text-lg md:text-xl font-bold tracking-wider text-amber-200/90">JAPAMALA VIRTUAL</h1>
+        <p class="text-xs text-amber-500/70 uppercase tracking-widest">108 Contas • Ho'oponopono</p>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <!-- Sound Toggle -->
+      <button id="soundToggleBtn" onclick="toggleSound()" title="Alternar Som" class="w-10 h-10 rounded-full bg-stone-900/80 border border-amber-900/30 flex items-center justify-center text-amber-300 hover:bg-amber-950/50 transition">
+        <i id="soundIcon" class="fa-solid fa-volume-high text-sm"></i>
+      </button>
+      <!-- Mode Toggle (Circular vs Vertical List) -->
+      <button id="layoutToggleBtn" onclick="toggleLayout()" title="Alternar Visualização" class="w-10 h-10 rounded-full bg-stone-900/80 border border-amber-900/30 flex items-center justify-center text-amber-300 hover:bg-amber-950/50 transition">
+        <i id="layoutIcon" class="fa-solid fa-circle-nodes text-sm"></i>
+      </button>
+      <!-- Stats Badge -->
+      <div class="bg-stone-900/80 border border-amber-900/40 rounded-full px-3 py-1.5 flex items-center space-x-2">
+        <i class="fa-solid fa-award text-amber-500 text-xs"></i>
+        <span id="completedCiclos" class="text-xs font-semibold text-amber-200">0 Ciclos</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="w-full max-w-4xl mx-auto px-4 flex-1 flex flex-col items-center justify-center py-4">
+
+    <!-- Ho'oponopono Mantras Display -->
+    <div class="w-full max-w-2xl bg-stone-900/40 backdrop-blur-md border border-amber-900/30 rounded-2xl p-4 md:p-6 text-center shadow-2xl mb-6 relative overflow-hidden">
+      <div class="absolute -top-10 -left-10 w-32 h-32 bg-amber-600/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+      
+      <p class="text-xs uppercase tracking-widest text-amber-500/80 mb-2 font-semibold">Oração do Ho'oponopono</p>
+      
+      <!-- Mantras Lines -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm md:text-base font-cinzel font-semibold tracking-wide">
+        <div id="mantra-1" class="p-2 rounded-lg border border-transparent transition-all duration-300 text-amber-100/70">"Sinto muito,</div>
+        <div id="mantra-2" class="p-2 rounded-lg border border-transparent transition-all duration-300 text-amber-100/70">Me perdoe,</div>
+        <div id="mantra-3" class="p-2 rounded-lg border border-transparent transition-all duration-300 text-amber-100/70">Eu te amo,</div>
+        <div id="mantra-4" class="p-2 rounded-lg border border-transparent transition-all duration-300 text-amber-100/70">Sou grato"</div>
+      </div>
+    </div>
+
+    <!-- Active Counter & Progress -->
+    <div class="w-full max-w-2xl flex items-center justify-between mb-4 px-2">
+      <div class="flex items-center space-x-2">
+        <span class="text-xs text-amber-400/80 uppercase tracking-wider font-semibold">Progresso:</span>
+        <span id="counterText" class="text-lg font-bold text-amber-300 font-cinzel">0 / 108</span>
+      </div>
+      <!-- Progress Bar -->
+      <div class="w-1/2 md:w-2/3 bg-stone-900/80 border border-amber-900/30 rounded-full h-3 overflow-hidden p-0.5">
+        <div id="progressBar" class="bg-gradient-to-r from-amber-700 via-amber-500 to-amber-300 h-full rounded-full transition-all duration-300 w-0"></div>
+      </div>
+    </div>
+
+    <!-- Interactive Beads Area -->
+    <div class="w-full max-w-2xl bg-stone-950/60 border border-amber-900/30 rounded-3xl p-4 md:p-6 shadow-inner flex flex-col items-center justify-center relative min-h-[360px]">
+      
+      <!-- Meru Bead Badge Top -->
+      <div id="meruBadge" class="mb-3 px-3 py-1 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 text-xs flex items-center space-x-1.5 shadow">
+        <i class="fa-solid fa-gem text-amber-400 text-xs"></i>
+        <span>Conta Guru (Meru) - Ponto de Início</span>
+      </div>
+
+      <!-- Layout 1: Grid / Strand view (Default readable view) -->
+      <div id="gridContainer" class="w-full max-h-[340px] overflow-y-auto custom-scrollbar p-2">
+        <div id="beadsGrid" class="grid grid-cols-6 sm:grid-cols-9 md:grid-cols-12 gap-2.5 sm:gap-3 justify-items-center">
+          <!-- Dynamically Generated 108 Beads -->
+        </div>
+      </div>
+
+      <!-- Layout 2: Circular Strand View (Alternative View) -->
+      <div id="circleContainer" class="hidden w-full h-[340px] relative flex items-center justify-center">
+        <!-- SVG connecting line -->
+        <svg id="beadCircleSVG" class="absolute inset-0 w-full h-full pointer-events-none opacity-20"></svg>
+        <div id="beadsCircle" class="w-full h-full relative">
+          <!-- Dynamically positioned beads -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Primary Interaction Buttons -->
+    <div class="w-full max-w-md mt-6 flex flex-col sm:flex-row items-center gap-3">
+      <!-- Big Press Next Bead Button -->
+      <button id="nextBeadBtn" onclick="advanceBead()" class="pulse-btn w-full flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-500 text-stone-950 font-bold text-lg font-cinzel shadow-lg shadow-amber-900/40 border border-amber-300/40 flex items-center justify-center space-x-3 active:scale-95 transition-all">
+        <i class="fa-solid fa-fingerprint text-xl"></i>
+        <span>APERTAR PRÓXIMA CONTA</span>
+      </button>
+
+      <!-- Reset Button -->
+      <button onclick="confirmReset()" class="w-full sm:w-auto py-4 px-5 rounded-2xl bg-stone-900/90 border border-amber-900/40 hover:bg-stone-800 text-amber-400 font-semibold text-sm flex items-center justify-center space-x-2 transition active:scale-95">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span>Reiniciar</span>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Modal Completion Celebration -->
+  <div id="completionModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-stone-900 border border-amber-500/50 rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl relative">
+      <div class="w-16 h-16 bg-amber-500/20 border border-amber-400 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-300 text-3xl">
+        <i class="fa-solid fa-lotus"></i>
+      </div>
+      <h2 class="font-cinzel text-2xl font-bold text-amber-200 mb-2">108 Contas Concluídas!</h2>
+      <p class="text-stone-300 text-sm mb-6 leading-relaxed">
+        Você completou um ciclo completo da oração do Ho'oponopono. Que a paz, a limpeza de memórias e a gratidão envolvam seu dia.
+      </p>
+      <div class="p-4 bg-amber-950/40 rounded-2xl border border-amber-900/40 mb-6">
+        <p class="text-xs text-amber-400/80 uppercase font-semibold">Frase de Causalidade</p>
+        <p class="font-cinzel text-amber-100 text-sm mt-1">"Sinto muito. Me perdoe. Eu te amo. Sou grato."</p>
+      </div>
+      <div class="flex flex-col space-y-2">
+        <button onclick="closeModalAndRestart()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-xl font-cinzel transition">
+          Iniciar Novo Ciclo
+        </button>
+        <button onclick="closeModalOnly()" class="w-full py-2.5 bg-stone-800 hover:bg-stone-700 text-amber-300 text-xs rounded-xl font-medium transition">
+          Visualizar Japamala Concluído
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="w-full max-w-4xl mx-auto px-4 py-4 text-center text-xs text-stone-500 border-t border-amber-900/20">
+    <p>Meditação Ho'oponopono • Japamala Interativo de 108 Contas</p>
+  </footer>
+
+  <script>
+    // State Variables
+    let currentBead = 0; // 0 to 108
+    const totalBeads = 108;
+    let totalCompletedCycles = parseInt(localStorage.getItem('japamala_cycles') || '0');
+    let isSoundEnabled = true;
+    let currentLayout = 'grid'; // 'grid' or 'circle'
+
+    // Audio Context Setup for Soft Bells/Chimes
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    // Play synthetic soft wood/chime sound
+    function playBeadSound(isGuru = false, isCompletion = false) {
+      if (!isSoundEnabled) return;
+      try {
+        initAudio();
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (isCompletion) {
+          // Tibetan Bowl harmonic sound
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(432, now); // 432 Hz Healing frequency
+          osc.frequency.exponentialRampToValueAtTime(864, now + 1.5);
+          
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 3.0);
+
+          osc.start(now);
+          osc.stop(now + 3.0);
+        } else if (isGuru) {
+          // Guru bead chime
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(528, now);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+          osc.start(now);
+          osc.stop(now + 1.2);
+        } else {
+          // Wooden bead tap sound
+          osc.type = 'triangle';
+          // Slightly alternate pitch rhythmically
+          const baseFreq = 220 + (currentBead % 4) * 30;
+          osc.frequency.setValueAtTime(baseFreq, now);
+          osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+
+          osc.start(now);
+          osc.stop(now + 0.09);
+        }
+      } catch (e) {
+        console.log('Audio error:', e);
+      }
+    }
+
+    // Mobile Haptic Feedback
+    function triggerHaptic(pattern = 25) {
+      if ('vibrate' in navigator) {
+        try {
+          navigator.vibrate(pattern);
+        } catch(e) {}
+      }
+    }
+
+    // DOM Elements
+    const beadsGrid = document.getElementById('beadsGrid');
+    const beadsCircle = document.getElementById('beadsCircle');
+    const counterText = document.getElementById('counterText');
+    const progressBar = document.getElementById('progressBar');
+    const completedCiclos = document.getElementById('completedCiclos');
+    const soundIcon = document.getElementById('soundIcon');
+    const layoutIcon = document.getElementById('layoutIcon');
+
+    // Initialize UI
+    window.onload = function() {
+      completedCiclos.innerText = `${totalCompletedCycles} ${totalCompletedCycles === 1 ? 'Ciclo' : 'Ciclos'}`;
+      renderBeadsGrid();
+      renderBeadsCircle();
+      updateProgress();
+    };
+
+    // Render Grid Layout
+    function renderBeadsGrid() {
+      beadsGrid.innerHTML = '';
+      
+      // Guru Bead first
+      const guruBtn = document.createElement('button');
+      guruBtn.id = 'bead-grid-0';
+      guruBtn.className = `bead w-10 h-10 rounded-full border-2 border-amber-500/70 bg-amber-950 text-amber-300 text-xs font-bold flex items-center justify-center cursor-pointer transition transform hover:scale-110 col-span-full mb-3`;
+      guruBtn.setAttribute('title', 'Conta Guru / Meru (Ponto de início)');
+      guruBtn.innerHTML = `<i class="fa-solid fa-om text-sm"></i>`;
+      guruBtn.onclick = () => selectBead(0);
+      beadsGrid.appendChild(guruBtn);
+
+      for (let i = 1; i <= totalBeads; i++) {
+        const btn = document.createElement('button');
+        btn.id = `bead-grid-${i}`;
+        btn.className = `bead w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-amber-900/50 bg-stone-900 text-amber-200/80 text-xs font-semibold flex items-center justify-center cursor-pointer transition hover:border-amber-500`;
+        btn.innerText = i;
+        btn.onclick = () => selectBead(i);
+        beadsGrid.appendChild(btn);
+      }
+    }
+
+    // Render Circle Layout
+    function renderBeadsCircle() {
+      beadsCircle.innerHTML = '';
+      const radius = 130; // Radius in px
+      const centerX = 160;
+      const centerY = 160;
+
+      for (let i = 1; i <= totalBeads; i++) {
+        // Distribute 108 beads along a circle
+        const angle = ((i - 1) / totalBeads) * (2 * Math.PI) - (Math.PI / 2);
+        const x = centerX + radius * Math.cos(angle) - 14;
+        const y = centerY + radius * Math.sin(angle) - 14;
+
+        const btn = document.createElement('button');
+        btn.id = `bead-circle-${i}`;
+        btn.className = `bead absolute w-7 h-7 rounded-full border border-amber-900/50 bg-stone-900 text-amber-200/80 text-[10px] font-semibold flex items-center justify-center cursor-pointer transition hover:border-amber-500`;
+        btn.style.left = `${x}px`;
+        btn.style.top = `${y}px`;
+        btn.innerText = i;
+        btn.onclick = () => selectBead(i);
+        beadsCircle.appendChild(btn);
+      }
+
+      // Add Guru bead in center bottom of circle
+      const guruBtn = document.createElement('button');
+      guruBtn.id = `bead-circle-0`;
+      guruBtn.className = `bead absolute w-10 h-10 rounded-full border-2 border-amber-500/80 bg-amber-950 text-amber-300 text-xs font-bold flex items-center justify-center cursor-pointer transition`;
+      guruBtn.style.left = `${centerX - 20}px`;
+      guruBtn.style.top = `${centerY - 20}px`;
+      guruBtn.innerHTML = `<i class="fa-solid fa-om text-base"></i>`;
+      guruBtn.onclick = () => selectBead(0);
+      beadsCircle.appendChild(guruBtn);
+    }
+
+    // Advance to next bead
+    function advanceBead() {
+      if (currentBead < totalBeads) {
+        selectBead(currentBead + 1);
+      } else {
+        // Complete Cycle
+        finishCycle();
+      }
+    }
+
+    // Select specific bead
+    function selectBead(index) {
+      currentBead = index;
+
+      if (index === 0) {
+        playBeadSound(true, false);
+      } else if (index === 108) {
+        playBeadSound(false, true);
+        triggerHaptic([50, 100, 50, 100, 150]);
+        setTimeout(() => finishCycle(), 400);
+      } else {
+        playBeadSound(false, false);
+        triggerHaptic(20);
+      }
+
+      updateProgress();
+      highlightMantraLine(index);
+      scrollToActiveBead(index);
+    }
+
+    // Highlight mantra phrase based on rhythm (4-part Ho'oponopono cycle)
+    function highlightMantraLine(beadNum) {
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`mantra-${i}`);
+        el.classList.remove('bg-amber-500/20', 'border-amber-500/40', 'text-amber-300', 'scale-105');
+        el.classList.add('text-amber-100/70', 'border-transparent');
+      }
+
+      if (beadNum > 0) {
+        // Rotate through the 4 lines
+        const activeLine = ((beadNum - 1) % 4) + 1;
+        const el = document.getElementById(`mantra-${activeLine}`);
+        el.classList.remove('text-amber-100/70', 'border-transparent');
+        el.classList.add('bg-amber-500/20', 'border-amber-500/40', 'text-amber-300', 'scale-105');
+      }
+    }
+
+    // Scroll container to keep active bead in view (grid mode)
+    function scrollToActiveBead(index) {
+      if (currentLayout !== 'grid') return;
+      const activeBtn = document.getElementById(`bead-grid-${index}`);
+      if (activeBtn) {
+        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+
+    // Update Progress UI
+    function updateProgress() {
+      counterText.innerText = `${currentBead} / ${totalBeads}`;
+      const percentage = (currentBead / totalBeads) * 100;
+      progressBar.style.width = `${percentage}%`;
+
+      // Update styles for all beads in both layouts
+      for (let i = 0; i <= totalBeads; i++) {
+        const gridBtn = document.getElementById(`bead-grid-${i}`);
+        const circleBtn = document.getElementById(`bead-circle-${i}`);
+
+        [gridBtn, circleBtn].forEach(btn => {
+          if (!btn) return;
+
+          // Reset status
+          btn.classList.remove('bead-completed', 'bead-active');
+
+          if (i < currentBead && i !== 0) {
+            btn.classList.add('bead-completed');
+          } else if (i === currentBead) {
+            btn.classList.add('bead-active');
+          }
+        });
+      }
+    }
+
+    // Complete cycle handler
+    function finishCycle() {
+      totalCompletedCycles += 1;
+      localStorage.setItem('japamala_cycles', totalCompletedCycles.toString());
+      completedCiclos.innerText = `${totalCompletedCycles} ${totalCompletedCycles === 1 ? 'Ciclo' : 'Ciclos'}`;
+
+      // Show Completion Modal
+      document.getElementById('completionModal').classList.remove('hidden');
+    }
+
+    // Modal Actions
+    function closeModalAndRestart() {
+      document.getElementById('completionModal').classList.add('hidden');
+      resetBeads();
+    }
+
+    function closeModalOnly() {
+      document.getElementById('completionModal').classList.add('hidden');
+    }
+
+    // Reset Progress
+    function confirmReset() {
+      if (currentBead > 0 && currentBead < 108) {
+        if (confirm('Deseja reiniciar a contagem do Japamala?')) {
+          resetBeads();
+        }
+      } else {
+        resetBeads();
+      }
+    }
+
+    function resetBeads() {
+      currentBead = 0;
+      updateProgress();
+      highlightMantraLine(0);
+      scrollToActiveBead(0);
+    }
+
+    // Toggle Audio
+    function toggleSound() {
+      isSoundEnabled = !isSoundEnabled;
+      soundIcon.className = isSoundEnabled ? 'fa-solid fa-volume-high text-sm' : 'fa-solid fa-volume-xmark text-sm text-stone-500';
+    }
+
+    // Toggle Layout View (Grid vs Circle)
+    function toggleLayout() {
+      const grid = document.getElementById('gridContainer');
+      const circle = document.getElementById('circleContainer');
+
+      if (currentLayout === 'grid') {
+        currentLayout = 'circle';
+        grid.classList.add('hidden');
+        circle.classList.remove('hidden');
+        layoutIcon.className = 'fa-solid fa-grip text-sm';
+      } else {
+        currentLayout = 'grid';
+        circle.classList.add('hidden');
+        grid.classList.remove('hidden');
+        layoutIcon.className = 'fa-solid fa-circle-nodes text-sm';
+        scrollToActiveBead(currentBead);
+      }
+    }
+  </script>
+</body>
+</html>
